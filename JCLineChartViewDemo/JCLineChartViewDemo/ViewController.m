@@ -2,7 +2,7 @@
 //  ViewController.m
 //  JCLineChartViewDemo
 //
-//  Created by ThreegeneDev on 14-8-12.
+//  Created by Jimple on 14-8-12.
 //  Copyright (c) 2014年 JimpleChen. All rights reserved.
 //
 
@@ -84,7 +84,6 @@
         
         NSArray *xValue4 = @[@(0.0f), @(20.0f),  @(CGFLOAT_MIN), @(30.0f), @(50.0f), @(70.0f), @(100.0f), @(CGFLOAT_MIN), @(110.0f), @(160.0f), @(240.0f)];
         NSArray *yValue4 = @[@(10.0f), @(30.0f),  @(CGFLOAT_MIN), @(40.0f), @(50.0f), @(80.0f), @(100.0f), @(CGFLOAT_MIN), @(120.0f), @(130.0f), @(140.0f)];
-        // CGFLOAT_MIN
         JCLineData *lineData4 = [[JCLineData alloc] init];
         lineData4.lineColor = [UIColor blueColor];
         lineData4.lineWidth = 1.0f;

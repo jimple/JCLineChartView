@@ -11,9 +11,7 @@
 #import "JCLinePointData.h"
 #import "UIBezierPath+curved.h"
 
-
 #define kLineColorDefault                   [UIColor blueColor]
-
 
 @interface JCLineChartView ()
 
@@ -48,7 +46,6 @@
     _lineData2LayerArrayDic = [[NSMutableDictionary alloc] init];
 }
 
-
 // 清空画布
 - (void)clearChart
 {
@@ -63,6 +60,7 @@
     [_lineData2LayerArrayDic removeAllObjects];
 }
 
+// 画线
 - (void)showLines:(NSArray *)lineDataArray withChartBound:(CGRect)chartBound
 {
     if (lineDataArray && (lineDataArray.count > 0))
@@ -147,7 +145,7 @@
         
         CAGradientLayer * gradientLayer;
         gradientLayer = [CAGradientLayer layer];
-        gradientLayer.frame = self.bounds;//chartBound;//self.bounds;
+        gradientLayer.frame = chartBound;
         gradientLayer.colors = colors;
         [self.layer addSublayer:gradientLayer];
         [layerArray addObject:gradientLayer];
@@ -195,6 +193,7 @@
     }else{}
 }
 
+#pragma mark -
 - (void)strokeChartWithLineDataArray:(NSArray *)lineDataArray
                       lineLayerArray:(NSArray *)lineLayerArray
                      pointLayerArray:(NSArray *)pointLayerArray
@@ -349,7 +348,7 @@
         if (gradientLayer)
         {
             CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
-            maskLayer.frame = self.bounds;
+            maskLayer.frame = chartBound;
             maskLayer.path = fillPath.CGPath;
             gradientLayer.mask = maskLayer;
         }else{}
@@ -424,7 +423,7 @@
     }else{/* assert */}
 
     CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
-    maskLayer.frame = self.bounds;
+    maskLayer.frame = chartBound;
     maskLayer.path = fillPath.CGPath;
     gradientLayer.mask = maskLayer;
     

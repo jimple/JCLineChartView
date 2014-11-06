@@ -72,7 +72,11 @@
     // 同时画两条曲线
     [chartView showLines:@[lineData2, lineData] withChartBound:CGRectMake(0.0f, 0.0f, 300.0f, 180.0f)];
     
-    // 画一条中间有断点的线（目前仅能用直线连接，不支持插值成曲线。isCurved设置无效）
+    
+    
+    
+    
+    // 画中间有断点的线（目前仅能用直线连接，不支持插值成曲线。isCurved设置无效）
     double delayInSeconds1 = 2.0f;
     dispatch_time_t delayTime1 = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds1 * NSEC_PER_SEC));
     dispatch_after(delayTime1, dispatch_get_main_queue(), ^(void){
@@ -98,6 +102,10 @@
         [chartView showLines:@[lineData4] withChartBound:CGRectMake(0.0f, 0.0f, 300.0f, 180.0f)];
     });
     
+    
+    
+    
+    
     // 颜色填充环形曲线内部
     double delayInSeconds2 = 4.0f;
     dispatch_time_t delayTime2 = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds2 * NSEC_PER_SEC));
@@ -121,6 +129,10 @@
                      inBound:CGRectMake(0.0f, 0.0f, 300.0f, 180.0f)
               drawBorderLine:NO];
     });
+    
+    
+    
+    
     
     // 颜色填充环形曲线内部，且画边缘曲线
     double delayInSeconds3 = 6.0f;

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2CDF5B89-B95E-44C9-9EC9-CBFCFEE4F98D</string>
+	<key>IDESourceControlProjectName</key>
+	<string>JCLineChartViewDemo</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>5D3CB02D2F4FEF909C5ACD49A3F6ABD788D4D4AF</key>
+		<string>https://github.com/jimple/JCLineChartView.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>JCLineChartViewDemo/JCLineChartViewDemo.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>5D3CB02D2F4FEF909C5ACD49A3F6ABD788D4D4AF</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/jimple/JCLineChartView.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>5D3CB02D2F4FEF909C5ACD49A3F6ABD788D4D4AF</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>5D3CB02D2F4FEF909C5ACD49A3F6ABD788D4D4AF</string>
+			<key>IDESourceControlWCCName</key>
+			<string>JCLineChartView</string>
+		</dict>
+	</array>
+</dict>
+</plist>

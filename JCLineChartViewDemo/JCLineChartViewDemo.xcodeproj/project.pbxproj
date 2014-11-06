@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07BA59091A0B6ABC00736E8C /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 07BA59081A0B6ABC00736E8C /* Launch Screen.xib */; };
 		6EA1EAAB199C4F8B00265422 /* UIBezierPath+curved.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EA1EAAA199C4F8B00265422 /* UIBezierPath+curved.m */; };
 		6EA4B046199A066A00BF4E63 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA4B045199A066A00BF4E63 /* Foundation.framework */; };
 		6EA4B048199A066A00BF4E63 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EA4B047199A066A00BF4E63 /* CoreGraphics.framework */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		07BA59081A0B6ABC00736E8C /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
 		6EA1EAA9199C4F8B00265422 /* UIBezierPath+curved.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIBezierPath+curved.h"; sourceTree = "<group>"; };
 		6EA1EAAA199C4F8B00265422 /* UIBezierPath+curved.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIBezierPath+curved.m"; sourceTree = "<group>"; };
 		6EA4B042199A066A00BF4E63 /* JCLineChartViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JCLineChartViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -130,6 +132,7 @@
 				6EA4B057199A066A00BF4E63 /* Main.storyboard */,
 				6EA4B05A199A066A00BF4E63 /* ViewController.h */,
 				6EA4B05B199A066A00BF4E63 /* ViewController.m */,
+				07BA59081A0B6ABC00736E8C /* Launch Screen.xib */,
 				6EA4B05D199A066A00BF4E63 /* Images.xcassets */,
 				6EA4B04C199A066A00BF4E63 /* Supporting Files */,
 			);
@@ -257,6 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6EA4B05E199A066A00BF4E63 /* Images.xcassets in Resources */,
+				07BA59091A0B6ABC00736E8C /* Launch Screen.xib in Resources */,
 				6EA4B050199A066A00BF4E63 /* InfoPlist.strings in Resources */,
 				6EA4B059199A066A00BF4E63 /* Main.storyboard in Resources */,
 			);

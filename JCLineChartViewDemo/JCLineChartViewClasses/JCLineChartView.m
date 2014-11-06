@@ -17,16 +17,7 @@
 
 @interface JCLineChartView ()
 
-@property (nonatomic, assign) CGRect chartBound;
-@property (nonatomic, strong) NSArray *lineDataArray;
-@property (nonatomic, assign) CGFloat xMin;
-@property (nonatomic, assign) CGFloat xMax;
-@property (nonatomic, assign) CGFloat yMin;
-@property (nonatomic, assign) CGFloat yMax;
-@property (nonatomic) NSMutableArray *lineLayerArray;
-@property (nonatomic) NSMutableArray *pointLayerArray;
-@property (nonatomic) NSMutableArray *linePathArray;
-@property (nonatomic) NSMutableArray *pointPathArray;
+@property (nonatomic, strong) NSMutableDictionary *lineData2LayerArrayDic;
 
 @end
 
@@ -37,6 +28,8 @@
     self = [super initWithFrame:frame];
     if (self) {
         // Initialization code
+        
+        [self commonInit];
     }
     return self;
 }
@@ -50,52 +43,48 @@
 }
 */
 
-- (void)showLines:(NSArray *)lineDataArray withChartBound:(CGRect)chartBound
+- (void)commonInit
 {
-    _lineDataArray = [NSArray arrayWithArray:lineDataArray];
-    _chartBound = chartBound;
-    _xMin = chartBound.origin.x;
-    _yMin = chartBound.origin.y;
-    _xMax = chartBound.origin.x + chartBound.size.width;
-    _yMax = chartBound.origin.y + chartBound.size.height;
-    
-    [self initalizeLineData:_lineDataArray];
-    [self strokeChart];
+    _lineData2LayerArrayDic = [[NSMutableDictionary alloc] init];
 }
 
-- (void)initalizeLineData:(NSArray *)lineDataArray
-{
-    if (_lineLayerArray)
-    {
-        for (CALayer *layer in _lineLayerArray)
-        {
-            [layer removeFromSuperlayer];
-        }
-    }else{}
-    if (_pointLayerArray)
-    {
-        for (CALayer *layer in _pointLayerArray)
-        {
-            [layer removeFromSuperlayer];
-        }
-    }else{}
 
+// 清空画布
+- (void)clearChart
+{
+    for (NSString *indexStr in _lineData2LayerArrayDic.allKeys)
+    {
+        NSArray *layerArray = _lineData2LayerArrayDic[indexStr];
+        for (CALayer *layer in layerArray)
+        {
+            [layer removeFromSuperlayer];
+        }
+    }
+    [_lineData2LayerArrayDic removeAllObjects];
+}
+
+- (void)showLines:(NSArray *)lineDataArray withChartBound:(CGRect)chartBound
+{
     if (lineDataArray && (lineDataArray.count > 0))
     {
-        _lineLayerArray = [NSMutableArray arrayWithCapacity:lineDataArray.count];
-        _pointLayerArray = [NSMutableArray arrayWithCapacity:lineDataArray.count];
+        if (!_lineData2LayerArrayDic)
+        {
+            _lineData2LayerArrayDic = [[NSMutableDictionary alloc] init];
+        }else{}
         
+        NSMutableArray *lineLayerArray = [NSMutableArray arrayWithCapacity:lineDataArray.count];
+        NSMutableArray *pointLayerArray = [NSMutableArray arrayWithCapacity:lineDataArray.count];
         for (JCLineData *lineData in lineDataArray)
         {
             // create as many chart line layers as there are data-lines
-            CAShapeLayer *chartLine = [CAShapeLayer layer];
-            chartLine.lineCap = kCALineCapButt;
-            chartLine.lineJoin = kCALineJoinMiter;
-            chartLine.fillColor = lineData.lineColor.CGColor;
-            chartLine.lineWidth = lineData.lineWidth;
-            chartLine.strokeEnd = 0.0;
-            [self.layer addSublayer:chartLine];
-            [_lineLayerArray addObject:chartLine];
+            CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
+            chartLineLayer.lineCap = kCALineCapButt;
+            chartLineLayer.lineJoin = kCALineJoinMiter;
+            chartLineLayer.fillColor = lineData.lineColor.CGColor;
+            chartLineLayer.lineWidth = lineData.lineWidth;
+            chartLineLayer.strokeEnd = 0.0;
+            [self.layer addSublayer:chartLineLayer];
+            [lineLayerArray addObject:chartLineLayer];
             
             // create point
             CAShapeLayer *pointLayer = [CAShapeLayer layer];
@@ -105,33 +94,155 @@
             pointLayer.fillColor     = lineData.lineColor.CGColor;
             pointLayer.lineWidth     = lineData.lineWidth;
             [self.layer addSublayer:pointLayer];
-            [_pointLayerArray addObject:pointLayer];
+            [pointLayerArray addObject:pointLayer];
+            
+            NSString *indexStr = @(_lineData2LayerArrayDic.allKeys.count).stringValue;
+            _lineData2LayerArrayDic[indexStr] = @[chartLineLayer, pointLayer];
         }
-    }
-    else
-    {
-        _lineLayerArray = [[NSMutableArray alloc] init];
-        _pointLayerArray = [[NSMutableArray alloc] init];
-    }
-    
-    [self setNeedsDisplay];
+        
+        [self setNeedsDisplay];
+        
+        [self strokeChartWithLineDataArray:lineDataArray
+                            lineLayerArray:lineLayerArray
+                           pointLayerArray:pointLayerArray
+                                chartBound:chartBound];
+    }else{}
 }
 
-- (void)strokeChart
+// 对闭合线内部区域填充颜色
+// 仅填充颜色
+- (void)cycleLine:(JCLineData *)lineData
+       fillColors:(NSArray *)fillColors
+          inBound:(CGRect)chartBound
 {
-    _linePathArray = [[NSMutableArray alloc] init];
-    _pointPathArray = [[NSMutableArray alloc] init];
-    
-    for (NSUInteger lineIndex = 0; lineIndex < _lineDataArray.count; lineIndex++)
+    [self cycleLine:lineData fillColors:fillColors inBound:chartBound drawBorderLine:NO];
+}
+// 填充颜色，且画边缘线
+- (void)cycleLine:(JCLineData *)lineData
+       fillColors:(NSArray *)fillColors
+          inBound:(CGRect)chartBound
+   drawBorderLine:(BOOL)drawBorder
+{
+    if (fillColors && (fillColors.count > 0) && lineData)
     {
-        JCLineData *lineData = _lineDataArray[lineIndex];
-        CAShapeLayer *lineLayer = (CAShapeLayer *)_lineLayerArray[lineIndex];
-        CAShapeLayer *pointLayer = (CAShapeLayer *)_pointLayerArray[lineIndex];
+        if (!_lineData2LayerArrayDic)
+        {
+            _lineData2LayerArrayDic = [[NSMutableDictionary alloc] init];
+        }else{}
+        NSMutableArray *layerArray = [[NSMutableArray alloc] init];
+        
+        // 填充颜色层
+        NSMutableArray *colors=[[NSMutableArray alloc] initWithCapacity:fillColors.count];
+        for (UIColor* color in fillColors)
+        {
+            if ([color isKindOfClass:[UIColor class]])
+            {
+                [colors addObject:(id)[color CGColor]];
+            }
+            else
+            {
+                [colors addObject:(id)color];
+            }
+        }
+        
+        CAGradientLayer * gradientLayer;
+        gradientLayer = [CAGradientLayer layer];
+        gradientLayer.frame = self.bounds;//chartBound;//self.bounds;
+        gradientLayer.colors = colors;
+        [self.layer addSublayer:gradientLayer];
+        [layerArray addObject:gradientLayer];
+        
+        if (drawBorder)
+        {
+            // create as many chart line layers as there are data-lines
+            CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
+            chartLineLayer.lineCap = kCALineCapButt;
+            chartLineLayer.lineJoin = kCALineJoinMiter;
+            chartLineLayer.fillColor = lineData.lineColor.CGColor;
+            chartLineLayer.lineWidth = lineData.lineWidth;
+            chartLineLayer.strokeEnd = 0.0;
+            [self.layer addSublayer:chartLineLayer];
+            
+            // create point
+            CAShapeLayer *pointLayer = [CAShapeLayer layer];
+            pointLayer.strokeColor   = lineData.lineColor.CGColor;
+            pointLayer.lineCap       = kCALineCapRound;
+            pointLayer.lineJoin      = kCALineJoinBevel;
+            pointLayer.fillColor     = lineData.lineColor.CGColor;
+            pointLayer.lineWidth     = lineData.lineWidth;
+            [self.layer addSublayer:pointLayer];
+            
+            [layerArray addObject:chartLineLayer];
+            [layerArray addObject:pointLayer];
+            
+            [self strokeChartWithLineDataArray:@[lineData]
+                                lineLayerArray:@[chartLineLayer]
+                               pointLayerArray:@[pointLayer]
+                            gradientLayerArray:@[gradientLayer]
+                                    chartBound:chartBound];
+        }
+        else
+        {
+            [self strokeChartForFillColorWithCycleLineData:lineData
+                                             gradientLayer:gradientLayer
+                                                chartBound:chartBound];
+        }
+        
+        NSString *indexStr = @(_lineData2LayerArrayDic.allKeys.count).stringValue;
+        _lineData2LayerArrayDic[indexStr] = layerArray;
+
+        [self setNeedsDisplay];
+    }else{}
+}
+
+- (void)strokeChartWithLineDataArray:(NSArray *)lineDataArray
+                      lineLayerArray:(NSArray *)lineLayerArray
+                     pointLayerArray:(NSArray *)pointLayerArray
+                          chartBound:(CGRect)chartBound
+{
+    [self strokeChartWithLineDataArray:lineDataArray
+                        lineLayerArray:lineLayerArray
+                       pointLayerArray:pointLayerArray
+                    gradientLayerArray:nil
+                            chartBound:chartBound];
+}
+- (void)strokeChartWithLineDataArray:(NSArray *)lineDataArray
+                      lineLayerArray:(NSArray *)lineLayerArray
+                     pointLayerArray:(NSArray *)pointLayerArray
+                  gradientLayerArray:(NSArray *)gradientLayerArray
+                          chartBound:(CGRect)chartBound
+{
+    NSAssert(lineDataArray && lineLayerArray && pointLayerArray
+             && (lineDataArray.count == lineLayerArray.count)
+             && (lineDataArray.count == pointLayerArray.count),
+             @" Assert!");
+    
+    CGFloat xMin = chartBound.origin.x;
+    CGFloat yMin = chartBound.origin.y;
+    CGFloat xMax = chartBound.origin.x + chartBound.size.width;
+    CGFloat yMax = chartBound.origin.y + chartBound.size.height;
+    
+    for (NSUInteger lineIndex = 0; lineIndex < lineDataArray.count; lineIndex++)
+    {
+        JCLineData *lineData = lineDataArray[lineIndex];
+        CAShapeLayer *lineLayer = (CAShapeLayer *)lineLayerArray[lineIndex];
+        CAShapeLayer *pointLayer = (CAShapeLayer *)pointLayerArray[lineIndex];
+        
+        // 颜色填充层
+        CAGradientLayer *gradientLayer;
+        if (gradientLayerArray && (gradientLayerArray.count > lineIndex))
+        {
+            id layer = gradientLayerArray[lineIndex];
+            if ([layer isKindOfClass:CAGradientLayer.class])
+            {
+                gradientLayer = (CAGradientLayer *)gradientLayerArray[lineIndex];
+            }else{}
+        }else{}
         
         CGPoint ptValue;
         CGFloat innerScaleX;
         CGFloat innerScaleY;
-
+        
         UIGraphicsBeginImageContext(self.frame.size);
         
         UIBezierPath *progressline = [UIBezierPath bezierPath];
@@ -142,24 +253,33 @@
         UIBezierPath *pointPath = [UIBezierPath bezierPath];
         [pointPath setLineWidth:lineData.lineWidth];
         
-        [_linePathArray addObject:progressline];
-        [_pointPathArray addObject:pointPath];
+        UIBezierPath *fillPath = [UIBezierPath bezierPath];
         
         NSMutableArray *linePointsArray = [[NSMutableArray alloc] init];
         BOOL hasBreakPoint = NO;
-        int iFirstPointIndex = 0;   // 线段第一个点的开始序号
+        NSUInteger iFirstPointIndex = 0;   // 线段第一个点的开始序号
         for (NSUInteger i = 0; i < lineData.pointCount; i++)
         {
             NSAssert(lineData.getPointValue, @" assert!");
-            
             ptValue = lineData.getPointValue(i);
             
-            innerScaleX = (ptValue.x - _xMin) / (_xMax - _xMin);
-            innerScaleY = (ptValue.y - _yMin) / (_yMax - _yMin);
+            innerScaleX = (ptValue.x - xMin) / (xMax - xMin);
+            innerScaleY = (ptValue.y - yMin) / (yMax - yMin);
             
-            int x = innerScaleX * _chartBound.size.width;
-            int y = (1.0f - innerScaleY) *_chartBound.size.height;
-
+            int x = innerScaleX * chartBound.size.width;
+            int y = (1.0f - innerScaleY) *chartBound.size.height;
+            
+            // 颜色填充层
+            if (gradientLayer)
+            {
+                if (i == 0)
+                {
+                    [fillPath moveToPoint:CGPointMake(x, y)];
+                }else{}
+                [fillPath addLineToPoint:CGPointMake(x, y)];
+            }
+            
+            // 线与顶点
             if (lineData.pointStyle == kEJCLinePointStyleCycle)
             {
                 if (ptValue.y == CGFLOAT_MIN)
@@ -201,8 +321,6 @@
             [linePointsArray addObject:[NSValue valueWithCGPoint:CGPointMake(x, y)]];
         }
         
-        [_linePathArray addObject:[linePointsArray copy]];
-        
         if (lineData.lineColor)
         {
             lineLayer.strokeColor = [lineData.lineColor CGColor];
@@ -220,12 +338,24 @@
             && lineData.isCurved)
         {
             progressline = [progressline smoothedDoublePointPathWithGranularity:20];
-        }
+            
+            if (gradientLayer)
+            {
+                fillPath = [fillPath smoothedPathWithGranularity:20];
+            }else{}
+        }else{/* assert */}
+        
+        // 颜色填充层
+        if (gradientLayer)
+        {
+            CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+            maskLayer.frame = self.bounds;
+            maskLayer.path = fillPath.CGPath;
+            gradientLayer.mask = maskLayer;
+        }else{}
         
         lineLayer.path = progressline.CGPath;
         pointLayer.path = pointPath.CGPath;
-        
-        
         if (lineData.showWithAnimation)
         {
             [CATransaction begin];
@@ -238,13 +368,7 @@
             [lineLayer addAnimation:pathAnimation forKey:@"strokeEndAnimation"];
             lineLayer.strokeEnd = 1.0;
             
-//            if (lineData.pointStyle != kEJCLinePointStyleNone)
-//            {
-//                [pointLayer addAnimation:pathAnimation forKey:@"strokeEndAnimation"];
-//            }else{}
-            
             [CATransaction setCompletionBlock:^{
-                //pointLayer.strokeEnd = 1.0f;
             }];
             [CATransaction commit];
         }
@@ -252,20 +376,60 @@
         {
             lineLayer.strokeEnd = 1.0;
         }
-
+        
         UIGraphicsEndImageContext();
     }
 }
 
+// 仅画填充层，不画边缘曲线
+- (void)strokeChartForFillColorWithCycleLineData:(JCLineData *)lineData
+                                   gradientLayer:(CAGradientLayer *)gradientLayer
+                                      chartBound:(CGRect)chartBound
+{
+    NSAssert(lineData && gradientLayer, @" Assert!");
+    
+    CGFloat xMin = chartBound.origin.x;
+    CGFloat yMin = chartBound.origin.y;
+    CGFloat xMax = chartBound.origin.x + chartBound.size.width;
+    CGFloat yMax = chartBound.origin.y + chartBound.size.height;
 
+    CGPoint ptValue;
+    CGFloat innerScaleX;
+    CGFloat innerScaleY;
+    
+    UIGraphicsBeginImageContext(self.frame.size);
+    
+    UIBezierPath *fillPath = [UIBezierPath bezierPath];
+    for (NSUInteger i = 0; i < lineData.pointCount; i++)
+    {
+        NSAssert(lineData.getPointValue, @" assert!");
+        ptValue = lineData.getPointValue(i);
+        
+        innerScaleX = (ptValue.x - xMin) / (xMax - xMin);
+        innerScaleY = (ptValue.y - yMin) / (yMax - yMin);
+        
+        int x = innerScaleX * chartBound.size.width;
+        int y = (1.0f - innerScaleY) *chartBound.size.height;
+        
+        if (i == 0)
+        {
+            [fillPath moveToPoint:CGPointMake(x, y)];
+        }else{}
+        [fillPath addLineToPoint:CGPointMake(x, y)];
+    }
+    
+    if (lineData.isCurved)
+    {
+        fillPath = [fillPath smoothedPathWithGranularity:20];
+    }else{/* assert */}
 
-
-
-
-
-
-
-
+    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+    maskLayer.frame = self.bounds;
+    maskLayer.path = fillPath.CGPath;
+    gradientLayer.mask = maskLayer;
+    
+    UIGraphicsEndImageContext();
+}
 
 
 

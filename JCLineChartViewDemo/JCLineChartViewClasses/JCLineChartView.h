@@ -8,11 +8,25 @@
 
 #import <UIKit/UIKit.h>
 
+@class JCLineData;
 @interface JCLineChartView : UIView
 
+// 清空画布
+- (void)clearChart;
 
-
+// 画线
 - (void)showLines:(NSArray *)lineDataArray withChartBound:(CGRect)chartBound;
+
+// 对闭合线内部区域填充颜色
+// 仅填充颜色
+- (void)cycleLine:(JCLineData *)lineData
+       fillColors:(NSArray *)fillColors
+          inBound:(CGRect)chartBound;
+// 填充颜色，且画边缘线
+- (void)cycleLine:(JCLineData *)lineData
+       fillColors:(NSArray *)fillColors
+          inBound:(CGRect)chartBound
+   drawBorderLine:(BOOL)drawBorder;
 
 
 

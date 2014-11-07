@@ -44,7 +44,7 @@
     JCLineData *lineData = [[JCLineData alloc] init];
     lineData.lineColor = [UIColor greenColor];
     lineData.lineWidth = 1.0f;
-    lineData.cyclePointWidth = 3.0f;
+    lineData.cyclePointWidth = 4.0f;
     lineData.pointStyle = kEJCLinePointStyleCycle;
     lineData.pointCount = xValue.count;
     lineData.getPointValue = ^CGPoint(NSUInteger index)
@@ -58,7 +58,8 @@
     JCLineData *lineData2 = [[JCLineData alloc] init];
     lineData2.lineColor = [UIColor blueColor];
     lineData2.lineWidth = 1.0f;
-    lineData2.cyclePointWidth = 2.0f;
+    lineData2.cyclePointWidth = 6.0f;
+    lineData2.cyclePointFillColor = chartView.backgroundColor;
     lineData2.pointStyle = kEJCLinePointStyleCycle;
     lineData2.pointCount = xValue2.count;
     lineData2.showWithAnimation = YES;

@@ -12,6 +12,8 @@
 #import "UIBezierPath+curved.h"
 
 #define kLineColorDefault                   [UIColor blueColor]
+#define kLineWidthDefault                   1.0f
+
 
 @interface JCLineChartView ()
 
@@ -75,22 +77,12 @@
         for (JCLineData *lineData in lineDataArray)
         {
             // create as many chart line layers as there are data-lines
-            CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
-            chartLineLayer.lineCap = kCALineCapButt;
-            chartLineLayer.lineJoin = kCALineJoinMiter;
-            chartLineLayer.fillColor = lineData.lineColor.CGColor;
-            chartLineLayer.lineWidth = lineData.lineWidth;
-            chartLineLayer.strokeEnd = 0.0;
+            CAShapeLayer *chartLineLayer = [self lineLayerWithLineData:lineData];
             [self.layer addSublayer:chartLineLayer];
             [lineLayerArray addObject:chartLineLayer];
             
             // create point
-            CAShapeLayer *pointLayer = [CAShapeLayer layer];
-            pointLayer.strokeColor   = lineData.lineColor.CGColor;
-            pointLayer.lineCap       = kCALineCapRound;
-            pointLayer.lineJoin      = kCALineJoinBevel;
-            pointLayer.fillColor     = lineData.lineColor.CGColor;
-            pointLayer.lineWidth     = lineData.lineWidth;
+            CAShapeLayer *pointLayer = [self pointLayerWithLineData:lineData];
             [self.layer addSublayer:pointLayer];
             [pointLayerArray addObject:pointLayer];
             
@@ -153,21 +145,11 @@
         if (drawBorder)
         {
             // create as many chart line layers as there are data-lines
-            CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
-            chartLineLayer.lineCap = kCALineCapButt;
-            chartLineLayer.lineJoin = kCALineJoinMiter;
-            chartLineLayer.fillColor = lineData.lineColor.CGColor;
-            chartLineLayer.lineWidth = lineData.lineWidth;
-            chartLineLayer.strokeEnd = 0.0;
+            CAShapeLayer *chartLineLayer = [self lineLayerWithLineData:lineData];
             [self.layer addSublayer:chartLineLayer];
             
             // create point
-            CAShapeLayer *pointLayer = [CAShapeLayer layer];
-            pointLayer.strokeColor   = lineData.lineColor.CGColor;
-            pointLayer.lineCap       = kCALineCapRound;
-            pointLayer.lineJoin      = kCALineJoinBevel;
-            pointLayer.fillColor     = lineData.lineColor.CGColor;
-            pointLayer.lineWidth     = lineData.lineWidth;
+            CAShapeLayer *pointLayer = [self pointLayerWithLineData:lineData];
             [self.layer addSublayer:pointLayer];
             
             [layerArray addObject:chartLineLayer];
@@ -430,9 +412,29 @@
     UIGraphicsEndImageContext();
 }
 
+- (CAShapeLayer *)lineLayerWithLineData:(JCLineData *)lineData
+{
+    CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
+    chartLineLayer.lineCap = kCALineCapButt;
+    chartLineLayer.lineJoin = kCALineJoinMiter;
+    chartLineLayer.fillColor = ((lineData && lineData.lineColor) ? lineData.lineColor.CGColor : kLineColorDefault.CGColor);
+    chartLineLayer.lineWidth = (lineData ? lineData.lineWidth : kLineWidthDefault);
+    chartLineLayer.strokeEnd = 0.0;
+    
+    return chartLineLayer;
+}
 
-
-
+- (CAShapeLayer *)pointLayerWithLineData:(JCLineData *)lineData
+{
+    CAShapeLayer *pointLayer = [CAShapeLayer layer];
+    pointLayer.strokeColor   = ((lineData && lineData.lineColor) ? lineData.lineColor.CGColor : kLineColorDefault.CGColor);
+    pointLayer.lineCap       = kCALineCapRound;
+    pointLayer.lineJoin      = kCALineJoinBevel;
+    pointLayer.fillColor     = ((lineData && lineData.cyclePointFillColor) ? lineData.cyclePointFillColor.CGColor : pointLayer.strokeColor);
+    pointLayer.lineWidth     = (lineData ? lineData.lineWidth : kLineWidthDefault);
+    
+    return pointLayer;
+}
 
 
 

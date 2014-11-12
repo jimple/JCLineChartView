@@ -236,7 +236,8 @@
         
         UIBezierPath *fillPath = [UIBezierPath bezierPath];
         
-        NSMutableArray *linePointsArray = [[NSMutableArray alloc] init];
+        
+        NSMutableArray *breakPointStateArray = [[NSMutableArray alloc] init];
         BOOL hasBreakPoint = NO;
         NSUInteger iFirstPointIndex = 0;   // 线段第一个点的开始序号
         for (NSUInteger i = 0; i < lineData.pointCount; i++)
@@ -250,89 +251,63 @@
             int x = innerScaleX * chartBound.size.width;
             int y = (1.0f - innerScaleY) *chartBound.size.height;
             
-            // 颜色填充层
-            if (gradientLayer)
-            {
-                if (i == 0)
-                {
-                    [fillPath moveToPoint:CGPointMake(x, y)];
-                }else{}
-                [fillPath addLineToPoint:CGPointMake(x, y)];
-            }
             
-            // 线与顶点
-            if (lineData.pointStyle == kEJCLinePointStyleCycle)
+            if (ptValue.y == CGFLOAT_MIN)
             {
-                if (ptValue.y == CGFLOAT_MIN)
+                iFirstPointIndex = i+1;
+                hasBreakPoint = YES;
+            }
+            else
+            {
+                // 颜色填充层
+                if (gradientLayer)
                 {
-                    iFirstPointIndex = i+1;
-                    hasBreakPoint = YES;
-                }
-                else
+                    if (i == iFirstPointIndex)
+                    {
+                        [fillPath moveToPoint:CGPointMake(x, y)];
+                    }
+                    else
+                    {
+                        
+                        [fillPath addLineToPoint:CGPointMake(x, y)];
+                    }
+                }else{}
+
+                // 线与顶点
+                if (lineData.pointStyle == kEJCLinePointStyleCycle)
                 {
+
                     CGPoint circleCenter = CGPointMake(x, y);
                     [pointPath moveToPoint:CGPointMake(circleCenter.x + (lineData.cyclePointWidth / 2.0f), circleCenter.y)];
                     [pointPath addArcWithCenter:circleCenter radius:(lineData.cyclePointWidth / 2.0f) startAngle:0 endAngle:(2 * M_PI) clockwise:YES];
                     
-                    if (i != iFirstPointIndex)
+                    if (i == iFirstPointIndex)
+                    {
+                        [progressline moveToPoint:CGPointMake(x, y)];
+                        [breakPointStateArray addObject:@(YES)];
+                    }
+                    else
                     {
                         [progressline addLineToPoint:CGPointMake(x, y)];
-                    }else{}
-                    [progressline moveToPoint:CGPointMake(x, y)];
-                    
-                    
-//                    if (ptValue.y == CGFLOAT_MIN)
-//                    {
-//                        iFirstPointIndex = i+1;
-//                        hasBreakPoint = YES;
-//                    }
-//                    else
-//                    {
-//                        if (i == iFirstPointIndex)
-//                        {
-//                            [progressline moveToPoint:CGPointMake(x, y)];
-//                        }else{}
-//                        
-//                        [progressline addLineToPoint:CGPointMake(x, y)];
-//                    }
-                }
-            }
-            else
-            {
-                if (ptValue.y == CGFLOAT_MIN)
-                {
-                    iFirstPointIndex = i+1;
-                    hasBreakPoint = YES;
+                        [breakPointStateArray addObject:@(NO)];
+                    }
                 }
                 else
                 {
-                    if (i != iFirstPointIndex)
-                    {
-                        [progressline addLineToPoint:CGPointMake(x, y)];
-                    }else{}
-                    
-                    [progressline moveToPoint:CGPointMake(x, y)];
-                }
-                
-                
-//                if (ptValue.y == CGFLOAT_MIN)
-//                {
-//                    iFirstPointIndex = i+1;
-//                    hasBreakPoint = YES;
-//                }
-//                else
-//                {
-//                    if (i == iFirstPointIndex)
-//                    {
-//                        [progressline moveToPoint:CGPointMake(x, y)];
-//                    }else{}
-//                    
-//                    [progressline addLineToPoint:CGPointMake(x, y)];
-//                }
-            }
-            
 
-            [linePointsArray addObject:[NSValue valueWithCGPoint:CGPointMake(x, y)]];
+                    if (i == iFirstPointIndex)
+                    {
+                        [progressline moveToPoint:CGPointMake(x, y)];
+                        [breakPointStateArray addObject:@(YES)];
+                    }
+                    else
+                    {
+                        
+                        [progressline addLineToPoint:CGPointMake(x, y)];
+                        [breakPointStateArray addObject:@(NO)];
+                    }
+                }
+            }
         }
         
         if (lineData.lineColor)
@@ -348,11 +323,9 @@
         
         [progressline stroke];
         
-        if (!hasBreakPoint  // 有孤立的点存在，则用这种方法暂时无法插值，需获得线段开始点位置，然后在插值时只对线段起止点间插值。
-            && lineData.isCurved)
+        if (lineData.isCurved)
         {
-            progressline = [progressline smoothedDoublePointPathWithGranularity:20];
-//            progressline = [progressline smoothedPathWithGranularity:20];
+            progressline = [progressline smoothedPathWithGranularity:20 breakPointStateArray:breakPointStateArray];
             
             if (gradientLayer)
             {
@@ -414,6 +387,7 @@
     
     UIGraphicsBeginImageContext(self.frame.size);
     
+    NSUInteger iFirstPointIndex = 0;   // 线段第一个点的开始序号
     UIBezierPath *fillPath = [UIBezierPath bezierPath];
     for (NSUInteger i = 0; i < lineData.pointCount; i++)
     {
@@ -425,12 +399,23 @@
         
         int x = innerScaleX * chartBound.size.width;
         int y = (1.0f - innerScaleY) *chartBound.size.height;
-        
-        if (i == 0)
+
+        if (ptValue.y == CGFLOAT_MIN)
         {
-            [fillPath moveToPoint:CGPointMake(x, y)];
-        }else{}
-        [fillPath addLineToPoint:CGPointMake(x, y)];
+            iFirstPointIndex = i+1;
+        }
+        else
+        {
+            if (i == iFirstPointIndex)
+            {
+                [fillPath moveToPoint:CGPointMake(x, y)];
+            }
+            else
+            {
+                
+                [fillPath addLineToPoint:CGPointMake(x, y)];
+            }
+        }
     }
     
     if (lineData.isCurved)
@@ -552,6 +537,7 @@
     CGFloat innerScaleX;
     CGFloat innerScaleY;
     
+    NSUInteger iFirstPointIndex = 0;   // 线段第一个点的开始序号
     UIBezierPath *fillPath = [UIBezierPath bezierPath];
     for (NSUInteger i = 0; i < lineData.pointCount; i++)
     {
@@ -563,12 +549,23 @@
         
         int x = innerScaleX * chartBound.size.width;
         int y = (1.0f - innerScaleY) *chartBound.size.height;
-        
-        if (i == 0)
+
+        if (ptValue.y == CGFLOAT_MIN)
         {
-            [fillPath moveToPoint:CGPointMake(x, y)];
-        }else{}
-        [fillPath addLineToPoint:CGPointMake(x, y)];
+            iFirstPointIndex = i+1;
+        }
+        else
+        {
+            if (i == iFirstPointIndex)
+            {
+                [fillPath moveToPoint:CGPointMake(x, y)];
+            }
+            else
+            {
+                
+                [fillPath addLineToPoint:CGPointMake(x, y)];
+            }
+        }
     }
     
     if (lineData.isCurved)

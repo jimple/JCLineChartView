@@ -15,4 +15,7 @@
 - (UIBezierPath*)smoothedDoublePointPathWithGranularity:(NSInteger)granularity;
 //- (UIBezierPath*)smoothedDoublePointPathWithGranularity:(NSInteger)granularity beginPointIndexArray:(NSArray *)beginPointIndex;
 
+- (NSArray *)pointsInBezierPath;
+
+
 @end

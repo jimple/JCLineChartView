@@ -28,6 +28,12 @@
           inBound:(CGRect)chartBound
    drawBorderLine:(BOOL)drawBorder;
 
+// 在两条线间填充颜色
+- (void)fillColors:(NSArray *)fillColors
+           inBound:(CGRect)chartBound
+       betweenLine:(JCLineData *)firstLineData
+           andLine:(JCLineData *)secondLineData;
+
 
 
 @end

@@ -279,6 +279,22 @@
                         [progressline addLineToPoint:CGPointMake(x, y)];
                     }else{}
                     [progressline moveToPoint:CGPointMake(x, y)];
+                    
+                    
+//                    if (ptValue.y == CGFLOAT_MIN)
+//                    {
+//                        iFirstPointIndex = i+1;
+//                        hasBreakPoint = YES;
+//                    }
+//                    else
+//                    {
+//                        if (i == iFirstPointIndex)
+//                        {
+//                            [progressline moveToPoint:CGPointMake(x, y)];
+//                        }else{}
+//                        
+//                        [progressline addLineToPoint:CGPointMake(x, y)];
+//                    }
                 }
             }
             else
@@ -297,8 +313,25 @@
                     
                     [progressline moveToPoint:CGPointMake(x, y)];
                 }
+                
+                
+//                if (ptValue.y == CGFLOAT_MIN)
+//                {
+//                    iFirstPointIndex = i+1;
+//                    hasBreakPoint = YES;
+//                }
+//                else
+//                {
+//                    if (i == iFirstPointIndex)
+//                    {
+//                        [progressline moveToPoint:CGPointMake(x, y)];
+//                    }else{}
+//                    
+//                    [progressline addLineToPoint:CGPointMake(x, y)];
+//                }
             }
             
+
             [linePointsArray addObject:[NSValue valueWithCGPoint:CGPointMake(x, y)]];
         }
         
@@ -319,6 +352,7 @@
             && lineData.isCurved)
         {
             progressline = [progressline smoothedDoublePointPathWithGranularity:20];
+//            progressline = [progressline smoothedPathWithGranularity:20];
             
             if (gradientLayer)
             {
@@ -367,7 +401,7 @@
                                    gradientLayer:(CAGradientLayer *)gradientLayer
                                       chartBound:(CGRect)chartBound
 {
-    NSAssert(lineData && gradientLayer, @" Assert!");
+    NSAssert(lineData && gradientLayer, @" Assert! ");
     
     CGFloat xMin = chartBound.origin.x;
     CGFloat yMin = chartBound.origin.y;
@@ -412,6 +446,73 @@
     UIGraphicsEndImageContext();
 }
 
+// 在两条线间填充颜色
+- (void)fillColors:(NSArray *)fillColors
+           inBound:(CGRect)chartBound
+       betweenLine:(JCLineData *)firstLineData
+           andLine:(JCLineData *)secondLineData
+{
+    NSAssert(fillColors && firstLineData && secondLineData, @" Assert! ");
+    
+    if (fillColors && (fillColors.count > 0) && firstLineData && secondLineData)
+    {
+        if (!_lineData2LayerArrayDic)
+        {
+            _lineData2LayerArrayDic = [[NSMutableDictionary alloc] init];
+        }else{}
+        NSMutableArray *layerArray = [[NSMutableArray alloc] init];
+        
+        // 填充颜色层
+        NSMutableArray *colors=[[NSMutableArray alloc] initWithCapacity:fillColors.count];
+        for (UIColor* color in fillColors)
+        {
+            if ([color isKindOfClass:[UIColor class]])
+            {
+                [colors addObject:(id)[color CGColor]];
+            }
+            else
+            {
+                [colors addObject:(id)color];
+            }
+        }
+        
+        CAGradientLayer * gradientLayer;
+        gradientLayer = [CAGradientLayer layer];
+        gradientLayer.frame = chartBound;
+        gradientLayer.colors = colors;
+        [self.layer addSublayer:gradientLayer];
+        [layerArray addObject:gradientLayer];
+        
+        UIGraphicsBeginImageContext(self.frame.size);
+        
+        UIBezierPath *firstLinePath = [self pathFromLine:firstLineData inBound:chartBound];
+        UIBezierPath *secondLinePath = [self pathFromLine:secondLineData inBound:chartBound];
+        
+        UIBezierPath *fillPath = [[UIBezierPath alloc] init];
+        [fillPath appendPath:firstLinePath];
+        NSArray *secondPathPointsArray = [[secondLinePath bezierPathByReversingPath] pointsInBezierPath];
+        for (int i = 0; i < secondPathPointsArray.count; i++)
+        {
+            CGPoint pt = [(NSValue *)[secondPathPointsArray objectAtIndex:i] CGPointValue];
+            [fillPath addLineToPoint:pt];
+        }
+        
+        CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+        maskLayer.frame = chartBound;
+        maskLayer.path = fillPath.CGPath;
+        gradientLayer.mask = maskLayer;
+        
+        UIGraphicsEndImageContext();
+        
+        NSString *indexStr = @(_lineData2LayerArrayDic.allKeys.count).stringValue;
+        _lineData2LayerArrayDic[indexStr] = layerArray;
+        
+        [self setNeedsDisplay];
+    }else{}
+}
+
+#pragma mark -
+
 - (CAShapeLayer *)lineLayerWithLineData:(JCLineData *)lineData
 {
     CAShapeLayer *chartLineLayer = [CAShapeLayer layer];
@@ -420,6 +521,8 @@
     chartLineLayer.fillColor = ((lineData && lineData.lineColor) ? lineData.lineColor.CGColor : kLineColorDefault.CGColor);
     chartLineLayer.lineWidth = (lineData ? lineData.lineWidth : kLineWidthDefault);
     chartLineLayer.strokeEnd = 0.0;
+    
+    chartLineLayer.fillColor = [UIColor clearColor].CGColor;
     
     return chartLineLayer;
 }
@@ -435,6 +538,81 @@
     
     return pointLayer;
 }
+
+- (UIBezierPath *)pathFromLine:(JCLineData *)lineData inBound:(CGRect)chartBound
+{
+    NSAssert(lineData, @" Assert! ");
+    
+    CGFloat xMin = chartBound.origin.x;
+    CGFloat yMin = chartBound.origin.y;
+    CGFloat xMax = chartBound.origin.x + chartBound.size.width;
+    CGFloat yMax = chartBound.origin.y + chartBound.size.height;
+    
+    CGPoint ptValue;
+    CGFloat innerScaleX;
+    CGFloat innerScaleY;
+    
+    UIBezierPath *fillPath = [UIBezierPath bezierPath];
+    for (NSUInteger i = 0; i < lineData.pointCount; i++)
+    {
+        NSAssert(lineData.getPointValue, @" assert!");
+        ptValue = lineData.getPointValue(i);
+        
+        innerScaleX = (ptValue.x - xMin) / (xMax - xMin);
+        innerScaleY = (ptValue.y - yMin) / (yMax - yMin);
+        
+        int x = innerScaleX * chartBound.size.width;
+        int y = (1.0f - innerScaleY) *chartBound.size.height;
+        
+        if (i == 0)
+        {
+            [fillPath moveToPoint:CGPointMake(x, y)];
+        }else{}
+        [fillPath addLineToPoint:CGPointMake(x, y)];
+    }
+    
+    if (lineData.isCurved)
+    {
+        fillPath = [fillPath smoothedPathWithGranularity:20];
+    }else{/* assert */}
+    
+    return fillPath;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

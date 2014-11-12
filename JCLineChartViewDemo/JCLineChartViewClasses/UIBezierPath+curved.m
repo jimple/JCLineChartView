@@ -48,6 +48,10 @@ NSArray *pointsFromBezierPath(UIBezierPath *bpath)
     return points;
 }
 
+- (NSArray *)pointsInBezierPath
+{
+    return pointsFromBezierPath(self);
+}
 
 - (UIBezierPath*)smoothedDoublePointPathWithGranularity:(NSInteger)granularity
 {
